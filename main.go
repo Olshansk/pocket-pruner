@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -204,78 +203,37 @@ func pruneBlockstore(
 		value := iter.Value()
 		var stringKey = string(key)
 		var inserted = false
+		for _, prefix := range blockstorePrefixes {
+			if bytes.HasPrefix([]byte(stringKey), prefix) {
+				chunks := strings.SplitN(stringKey, ":", 3)
+				if len(chunks) < 2 {
+					log.Fatal("Cannot convert ", stringKey)
+				}
+				var intKey, err = strconv.Atoi(chunks[1])
+				if err != nil {
+					log.Fatal("Cannot convert ", stringKey)
+				}
 
-		// TODO_DISCUSS_IN_THIS_PR: Can we not create a helper and loop over `blockstorePrefixes`
+				pruneBeforeBlockToCheck := pruneBeforeBlock
+				if strings.HasPrefix(stringKey, "C:") {
+					// Why decrement here?
+					// height-1 is set to the integer part of the blockCommit key.
+					// See store.SaveBlock in tendermint.
+					pruneBeforeBlockToCheck--
+				}
 
-		// block commits
-		if strings.HasPrefix(stringKey, "C:") {
-			var replaceKey = strings.Replace(stringKey, "C:", "", -1)
-			var intKey, err = strconv.Atoi(replaceKey)
-			if err != nil {
-				log.Fatal("Cannot convert ", replaceKey)
+				if intKey > 1 && intKey < pruneBeforeBlockToCheck {
+					dbn.Put(key, nil, nil)
+				} else {
+					dbn.Put(key, value, nil)
+				}
+				inserted = true
 			}
-			// TODO_DISCUSS_IN_THIS_PR: Unclear to me what `C int is 1 lower than height` means: can we update the comment?
-			// C int is 1 lower than height
-			if intKey > 1 && (intKey+1) < pruneBeforeBlock {
-				dbn.Put(key, nil, nil)
-			} else {
-				dbn.Put(key, value, nil)
-			}
-			inserted = true
-		}
-
-		// block meta
-		if strings.HasPrefix(stringKey, "H:") {
-			var replaceKey = strings.Replace(stringKey, "H:", "", -1)
-			var intKey, err = strconv.Atoi(replaceKey)
-			if err != nil {
-				log.Fatal("Cannot convert ", replaceKey)
-			}
-			if intKey > 1 && intKey < pruneBeforeBlock {
-				dbn.Put(key, nil, nil)
-			} else {
-				dbn.Put(key, value, nil)
-			}
-			inserted = true
-		}
-
-		// block seen commit
-		if strings.HasPrefix(stringKey, "SC:") {
-			var replaceKey = strings.Replace(stringKey, "SC:", "", -1)
-			var intKey, err = strconv.Atoi(replaceKey)
-			if err != nil {
-				log.Fatal("Cannot convert ", replaceKey)
-			}
-			if intKey > 1 && intKey < pruneBeforeBlock {
-				dbn.Put(key, nil, nil)
-			} else {
-				dbn.Put(key, value, nil)
-			}
-			inserted = true
-		}
-
-		// block parts
-		if strings.HasPrefix(stringKey, "P:") {
-			var replaceKey = strings.Replace(stringKey, "P:", "", -1)
-			re := regexp.MustCompile(`:(\d)+$`)
-			replaceKey = re.ReplaceAllString(replaceKey, "")
-
-			var intKey, err = strconv.Atoi(replaceKey)
-			if err != nil {
-				log.Fatal("Cannot convert ", replaceKey)
-			}
-			if intKey > 1 && intKey < pruneBeforeBlock {
-				dbn.Put(key, nil, nil)
-			} else {
-				dbn.Put(key, value, nil)
-			}
-			inserted = true
 		}
 
 		if !inserted {
 			dbn.Put(key, value, nil)
 		}
-
 	}
 	iter.Release()
 	log.Println("Done - blockstore.db")
@@ -317,14 +275,13 @@ func pruneStateDb(
 
 		for _, prefix := range stateDbPrefixes {
 			if bytes.HasPrefix(key, prefix) {
-				versionBytes := key[len(prefix):]
-				var version, err = strconv.Atoi(string(versionBytes))
+				heightBytes := key[len(prefix):]
+				var height, err = strconv.Atoi(string(heightBytes))
 				if err != nil {
 					log.Fatal("Cannot convert ", string(key))
 				}
 
-				// TODO_DISCUSS_IN_THIS_PR: Unclear what `version` is. Is it the height?
-				if version > 1 && version < pruneBeforeBlock {
+				if height > 1 && height < pruneBeforeBlock {
 					dstDb.Put(key, nil, nil)
 				} else {
 					dstDb.Put(key, value, nil)
