@@ -117,7 +117,7 @@ After switching directories, you can start the pocket-core binary in a normal wa
 
 ## Example commands
 
-```
+```bash
 # Query the height
 $ pocket query height
 2023/07/06 01:23:02 Initializing Pocket Datadir
