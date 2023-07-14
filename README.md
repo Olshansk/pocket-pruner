@@ -1,7 +1,9 @@
 # Pocket Pruner <!-- omit in toc -->
 
 - [How to prune data](#how-to-prune-data)
-  - [Example](#example)
+  <<<<<<< HEAD
+  - # [Example](#example)
+    > > > > > > > upstream/main
 - [Pruning rules](#pruning-rules)
 - [Example commands](#example-commands)
 - [FAQ](#faq)
@@ -41,6 +43,7 @@ To start pruning, you stop the pocket-core binary and execute the following
 command.
 
 ```bash
+
 pruner <pruneBeforeBlock> <dataDir> <databases>
 
 Where
@@ -56,11 +59,17 @@ Where
     supported names are `application`, `blockstore`, `state`, and `txindexer`.
 ```
 
+<<<<<<< HEAD
+
 ### Example
 
-For example, the following command erases all data before block 80000.
-Please note that with this command, data at block 79999 and older is erased, and
-data at block 80000 and newer is kept.
+=======
+
+> > > > > > > upstream/main
+> > > > > > > For example, the following command erases all data before block 80000.
+> > > > > > > Please note that with this command, data at block 79999 and older is erased, and
+> > > > > > > data at block 80000 and newer is kept. See the ["Example commands"](#example-commands)
+> > > > > > > for the actual pruning scenario.
 
 ```bash
 pruner 80000 ~/.pocket/data application,blockstore,txindexer,state
@@ -109,8 +118,12 @@ After switching directories, you can start the pocket-core binary in a normal wa
    blocks at all valid (i.e. active) session heights. Otherwise the node will stop
    syncing.
 
-   _We **RECOMMEND** keeping at least `pos/BlocksPerSession _ pocketcore/ClaimExpiration`
-   blocks in application.db\*_, which is currently 96 blocks in the Pocket mainnet._
+<<<<<<< HEAD
+_We **RECOMMEND** keeping at least `pos/BlocksPerSession _ pocketcore/ClaimExpiration`   blocks in application.db\*_, which is currently 96 blocks in the Pocket mainnet._
+=======
+   _We **RECOMMEND** keeping at least`pos/BlocksPerSession \* pocketcore/ClaimExpiration`   blocks in`application.db`, which is currently 96 blocks in the Pocket mainnet.\_
+
+> > > > > > > upstream/main
 
 4. A tendermint block contains a field named [Evidence](https://github.com/tendermint/tendermint/blob/main/spec/consensus/evidence.md) that stores duplicated vote (i.e. double-sign)information if detected.
    When a node validates a proposed block with `Evidence`, it needs to access
@@ -124,33 +137,45 @@ After switching directories, you can start the pocket-core binary in a normal wa
 
 ## Example commands
 
+<<<<<<< HEAD
+
 ```bash
+=======
+```
+
+> > > > > > > upstream/main
+
 # Query the height
+
 $ pocket query height
 2023/07/06 01:23:02 Initializing Pocket Datadir
 2023/07/06 01:23:02 datadir = /home/ubuntu/.pocket
 http://localhost:8082/v1/query/height
 {
-    "height": 100010
+"height": 100010
 }
 
 # Stop the pocket node
+
 $ sudo systemctl stop pocket
 
 # Inspect the current disk usage; contains only unpruned data
+
 $ du -d1 -h .pocket/data
-26G     .pocket/data/state.db
-1022M   .pocket/data/cs.wal
-323G    .pocket/data/application.db
-171G    .pocket/data/blockstore.db
-182G    .pocket/data/txindexer.db
-6.6M    .pocket/data/evidence.db
-702G    .pocket/data
+26G .pocket/data/state.db
+1022M .pocket/data/cs.wal
+323G .pocket/data/application.db
+171G .pocket/data/blockstore.db
+182G .pocket/data/txindexer.db
+6.6M .pocket/data/evidence.db
+702G .pocket/data
 
 # Start the pruner as a background process
+
 $ nohup ./pruner 99800 ~/.pocket/data application,blockstore,txindexer >prune.log&
 
 # Follow the pruner logs
+
 $ tail -f prune.log
 2023/07/06 01:24:14 Pruning before block: 99800
 2023/07/06 01:24:15 application.db - s/k:application/
@@ -167,51 +192,87 @@ $ tail -f prune.log
 2023/07/06 03:57:29 Completed all tasks.
 
 # Inspect the new disk usage; contains both pruned and unpruned data
+
 $ du -d1 -h .pocket/data
-26G     .pocket/data/state.db
-1022M   .pocket/data/cs.wal
-595M    .pocket/data/blockstore-new.db
-323G    .pocket/data/application.db
-1.2G    .pocket/data/application-new.db
-171G    .pocket/data/blockstore.db
-19G     .pocket/data/txindexer-new.db
-182G    .pocket/data/txindexer.db
-6.6M    .pocket/data/evidence.db
-722G    .pocket/data
+26G .pocket/data/state.db
+1022M .pocket/data/cs.wal
+595M .pocket/data/blockstore-new.db
+323G .pocket/data/application.db
+1.2G .pocket/data/application-new.db
+171G .pocket/data/blockstore.db
+19G .pocket/data/txindexer-new.db
+182G .pocket/data/txindexer.db
+6.6M .pocket/data/evidence.db
+722G .pocket/data
+
+<<<<<<< HEAD
 
 # Overwrite the original data with the pruned data
+
 $ mv .pocket/data/application.db ~/application-original.db
 $ mv .pocket/data/blockstore.db ~/blockstore-original.db
 $ mv .pocket/data/txindexer.db ~/txindexer-original.db
-$ mv .pocket/data/application-new.db .pocket/data/application.db
-$ mv .pocket/data/blockstore-new.db .pocket/data/blockstore.db
-$ mv .pocket/data/txindexer-new.db .pocket/data/txindexer.db
+=======
+
+# Replace the original data with the pruned data
+
+$ rm -rf .pocket/data/application.db
+
+> > > > > > > upstream/main
+> > > > > > > $ mv .pocket/data/application-new.db .pocket/data/application.db
+> > > > > > > $ rm -rf .pocket/data/blockstore.db
+> > > > > > > $ mv .pocket/data/blockstore-new.db .pocket/data/blockstore.db
+> > > > > > > $ rm -rf .pocket/data/txindexer.db
+> > > > > > > $ mv .pocket/data/txindexer-new.db .pocket/data/txindexer.db
 
 # Inspect the new disk usage; contains only pruned data
+
 $ du -d1 -h .pocket/data
-26G     .pocket/data/state.db
-1022M   .pocket/data/cs.wal
-1.2G    .pocket/data/application.db
-595M    .pocket/data/blockstore.db
-19G     .pocket/data/txindexer.db
-6.6M    .pocket/data/evidence.db
-47G     .pocket/data
+26G .pocket/data/state.db
+1022M .pocket/data/cs.wal
+1.2G .pocket/data/application.db
+595M .pocket/data/blockstore.db
+19G .pocket/data/txindexer.db
+6.6M .pocket/data/evidence.db
+47G .pocket/data
 
 # Start the pocket node
+
 $ sudo systemctl start pocket
 
+<<<<<<< HEAD
+
 # Query the height using the pocket binary
-$ pocket query height
-2023/07/06 07:27:31 Initializing Pocket Datadir
-2023/07/06 07:27:31 datadir = /home/ubuntu/.pocket
-http://localhost:8082/v1/query/height
-{
+
+=======
+
+# Query the height again to make sure the node is running
+
+> > > > > > > upstream/main
+> > > > > > > $ pocket query height
+> > > > > > > 2023/07/06 07:27:31 Initializing Pocket Datadir
+> > > > > > > 2023/07/06 07:27:31 datadir = /home/ubuntu/.pocket
+> > > > > > > http://localhost:8082/v1/query/height
+> > > > > > > {
+
     "height": 100010
+
 }
 
+<<<<<<< HEAD
+
 # Query the height using a direct curl command
-$ curl -X POST -d '{"height":99799}' localhost:8082/v1/query/block
-{"block":null,"block_id":{"hash":"","parts":{"hash":"","total":"0"}}}
+
+=======
+
+# Querying a pruned block returns a null block
+
+> > > > > > > upstream/main
+> > > > > > > $ curl -X POST -d '{"height":99799}' localhost:8082/v1/query/block
+> > > > > > > {"block":null,"block_id":{"hash":"","parts":{"hash":"","total":"0"}}}
+
+```
+
 ```
 
 ## FAQ
